@@ -23,15 +23,7 @@ Topics are prefixed with a unique string (`NTFY_TOPIC_PREFIX`) to prevent collis
 
 ## Setup
 
-### 1. Install Homebrew
-
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-Follow the post-install instructions to add brew to your PATH (printed at the end of the installer).
-
-### 2. Configure Tingly
+### 1. Configure Tingly
 
 ```bash
 cp .env.example .env
@@ -43,7 +35,7 @@ Edit `.env`:
 - `NTFY_URL` — leave as `https://ntfy.sh`
 - `PORT` — leave as `7654`
 
-### 3. Install as a login service
+### 2. Install as a login service
 
 ```bash
 chmod +x launchd/install.sh
@@ -58,7 +50,7 @@ curl -s http://localhost:7654/health
 # → {"ok": true}
 ```
 
-### 4. Set up the ntfy iOS app
+### 3. Set up the ntfy iOS app
 
 1. Install ntfy from the App Store
 2. Leave the default server (`https://ntfy.sh`)
