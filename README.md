@@ -1,16 +1,17 @@
 # Tingly
 
-Lightweight self-hosted push notification bus. Any local project POSTs to Tingly's HTTP API; Tingly routes to an ntfy server; your phone gets a push notification.
+Lightweight self-hosted push notification bus. Any local project POSTs to Tingly's HTTP API; Tingly routes to ntfy.sh; your phone gets a push notification anywhere.
 
 ## Architecture
 
 ```
-caller → POST /notify → Tingly :7654 → ntfy :8080 → phone (via Tailscale)
+caller → POST /notify → Tingly :7654 → ntfy.sh → phone
 ```
 
-- **Tingly** — auth layer and topic router (~70 lines of Flask)
-- **ntfy** — open-source push notification server (binwiederhier/ntfy)
-- **Tailscale** — encrypted mesh VPN so your phone reaches the Mac Mini from anywhere
+- **Tingly** — auth layer and topic router (~70 lines of Flask), runs on your Mac Mini
+- **ntfy.sh** — open-source push notification relay (free, no account required)
+
+Topics are prefixed with a unique string (`NTFY_TOPIC_PREFIX`) to prevent collisions with other ntfy.sh users.
 
 ## Topics
 
@@ -30,19 +31,7 @@ caller → POST /notify → Tingly :7654 → ntfy :8080 → phone (via Tailscale
 
 Follow the post-install instructions to add brew to your PATH (printed at the end of the installer).
 
-### 2. Install ntfy server
-
-```bash
-brew install ntfy
-```
-
-### 3. Install Tailscale
-
-Download the Tailscale macOS app from https://tailscale.com/download and sign in.
-Install Tailscale on your iPhone from the App Store and sign in to the same account.
-Both devices now share a private network — find the Mac Mini's Tailscale IP in the Tailscale menu bar app (e.g. `100.x.x.x`) or use its MagicDNS hostname (e.g. `mac-mini.ts.net`).
-
-### 4. Configure Tingly
+### 2. Configure Tingly
 
 ```bash
 cp .env.example .env
@@ -50,17 +39,18 @@ cp .env.example .env
 
 Edit `.env`:
 - `TINGLY_TOKEN` — generate a random string: `openssl rand -hex 20`
-- `NTFY_URL` — leave as `http://localhost:8080`
+- `NTFY_TOPIC_PREFIX` — pick something unique and hard to guess (e.g. `openssl rand -hex 8`)
+- `NTFY_URL` — leave as `https://ntfy.sh`
 - `PORT` — leave as `7654`
 
-### 5. Install services
+### 3. Install as a login service
 
 ```bash
 chmod +x launchd/install.sh
 ./launchd/install.sh
 ```
 
-This creates a Python venv, installs dependencies, generates LaunchAgent plists with the correct paths, and starts both services. Both will restart automatically on login.
+This creates a Python venv, installs dependencies, generates a LaunchAgent plist, and starts Tingly. It will restart automatically on login.
 
 Verify:
 ```bash
@@ -68,12 +58,14 @@ curl -s http://localhost:7654/health
 # → {"ok": true}
 ```
 
-### 6. Set up the ntfy iOS app
+### 4. Set up the ntfy iOS app
 
-1. Open the ntfy app → Settings → Default server → enter `http://<tailscale-ip>:8080`
-2. Subscribe to each topic: `threshold`, `trading`, `system`
-
-You'll now receive notifications on your phone from anywhere, routed through your Tailscale network.
+1. Install ntfy from the App Store
+2. Leave the default server (`https://ntfy.sh`)
+3. Subscribe to each prefixed topic — replace `<prefix>` with your `NTFY_TOPIC_PREFIX`:
+   - `<prefix>-threshold`
+   - `<prefix>-trading`
+   - `<prefix>-system`
 
 ## API
 
@@ -130,8 +122,7 @@ def tingly(title, body, topic, priority="default", tags=[], source=""):
 ## Logs
 
 ```bash
-tail -f /tmp/tingly.log   # Tingly request log
-tail -f /tmp/ntfy.log     # ntfy server log
+tail -f /tmp/tingly.log
 ```
 
 ## Stopping / restarting
