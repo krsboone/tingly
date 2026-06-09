@@ -5,6 +5,7 @@ set -e
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 LAUNCHD="$HOME/Library/LaunchAgents"
+LABEL="com.$(whoami).tingly"
 
 if [ ! -f "$REPO/.env" ]; then
     echo ".env not found — copy .env.example to .env and fill in values"
@@ -20,13 +21,13 @@ fi
 mkdir -p "$LAUNCHD"
 
 # Tingly plist
-cat > "$LAUNCHD/com.kris.tingly.plist" <<EOF
+cat > "$LAUNCHD/$LABEL.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.kris.tingly</string>
+    <string>$LABEL</string>
     <key>ProgramArguments</key>
     <array>
         <string>$REPO/.venv/bin/python3</string>
@@ -46,8 +47,8 @@ cat > "$LAUNCHD/com.kris.tingly.plist" <<EOF
 </plist>
 EOF
 
-launchctl unload "$LAUNCHD/com.kris.tingly.plist" 2>/dev/null || true
-launchctl load "$LAUNCHD/com.kris.tingly.plist"
+launchctl unload "$LAUNCHD/$LABEL.plist" 2>/dev/null || true
+launchctl load "$LAUNCHD/$LABEL.plist"
 
 echo ""
 echo "Done. Tingly is running."
